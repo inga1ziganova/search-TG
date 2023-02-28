@@ -1,0 +1,23 @@
+import telegram
+from telegram.ext import Updater, MessageHandler, Filters
+import requests
+
+def search_image(bot, update):
+    chat_id = update.message.chat_id
+    text = update.message.text
+    response = requests.get('https://api.your-imagesearch-api.com', params={'query': text})
+    if response.status_code == 200:
+        results = response.json()['results']
+        if results:
+            urls = [result['url'] for result in results]
+            for url in urls:
+                bot.send_photo(chat_id=chat_id, photo=url)
+        else:
+            bot.send_message(chat_id=chat_id, text='No images found for your description.')
+    else:
+        bot.send_message(chat_id=chat_id, text='Error searching for images.')
+
+updater = Updater('YOUR_API_TOKEN')
+updater.dispatcher.add_handler(MessageHandler(Filters.text, search_image))
+updater.start_polling()
+updater.idle()
